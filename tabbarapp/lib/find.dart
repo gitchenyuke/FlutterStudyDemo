@@ -215,6 +215,9 @@ class _SampleAppPageState extends State<FindPageView> {
     }, (HttpIOException error) {
       // 请求错误
       print(error.message);
+       // 结束刷新
+      _controller.finishRefresh();
+      _controller.finishLoad();
     });
   }
 
