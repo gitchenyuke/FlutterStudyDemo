@@ -41,16 +41,16 @@ class HttpUtil {
     dio = new Dio(orgOption);
 
     /// 设置这个才可以抓包
-    // (dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate =
-    //     (HttpClient client) {
-    //   //错误证书不处理
-    //   client.badCertificateCallback =
-    //       (X509Certificate cert, String host, int port) => true;
-    //   client.findProxy = (uri) {
-    //     //proxy all request to localhost:8888
-    //     return "PROXY $ip";
-    //   };
-    // };
+    (dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate =
+        (HttpClient client) {
+      //错误证书不处理
+      client.badCertificateCallback =
+          (X509Certificate cert, String host, int port) => true;
+      client.findProxy = (uri) {
+        //proxy all request to localhost:8888
+        return "PROXY $ip";
+      };
+    };
   }
 
   //get请求

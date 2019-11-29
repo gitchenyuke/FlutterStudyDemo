@@ -1,9 +1,11 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'lxhentity.dart';
 import 'dioManager.dart';
 import 'package:flutter_easyrefresh/easy_refresh.dart';
-import 'package:flutter_easyrefresh/ball_pulse_header.dart';
-import 'package:flutter_easyrefresh/ball_pulse_footer.dart';
+
+import 'package:tabbarapp/listView.dart';
 
 void main() {
   runApp(FindPage());
@@ -37,37 +39,54 @@ class FindPageView extends StatefulWidget {
 }
 
 class ListViewCell extends StatelessWidget {
-  String title;
-  String subTitle;
-  ListViewCell(this.title, this.subTitle);
+  final String title;
+  final String subTitle;
+  // 点击事件
+  final VoidCallback onPressed;
+
+  ListViewCell({
+    Key key,
+    this.title,
+    this.subTitle,
+    this.onPressed,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
-    return Container(
-      child: Column(
-        children: <Widget>[
-          Container(
-            child: ListViewItem(title, subTitle),
-          ),
-          Container(
-            color: Colors.grey,
-            constraints: BoxConstraints.expand(height: 0.5),
-          ),
-        ],
+    return FlatButton(
+      onPressed: onPressed,
+      padding: EdgeInsets.all(0.0),
+      shape: Border.all(
+        color: Colors.orange,
+        width: 0.0,
+        style: BorderStyle.none,
+      ),
+      child: Container(
+        child: Column(
+          children: <Widget>[
+            Container(
+              child: ListViewItem(title, subTitle),
+            ),
+            Container(
+              color: Colors.grey,
+              constraints: BoxConstraints.expand(height: 0.5),
+            )
+          ],
+        ),
       ),
     );
   }
 }
 
 class ListViewItem extends StatelessWidget {
-  String title;
-  String subTitle;
+  final String title;
+  final String subTitle;
+
   ListViewItem(this.title, this.subTitle);
 
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
     return Container(
       width: double.infinity, //宽度占满全屏
       color: Colors.green,
@@ -138,24 +157,51 @@ class _SampleAppPageState extends State<FindPageView> {
       ),
       body: EasyRefresh.custom(
         //刷新控件
-        header: BallPulseHeader(),
-        footer: BallPulseFooter(),
+        // header: BallPulseHeader(),
+        // footer: BallPulseFooter(),
         controller: _controller,
         enableControlFinishRefresh: true, //手动控制结束刷新
         enableControlFinishLoad: true, //手动控制结束加载
         firstRefresh: true,
         onRefresh: () async {
-          getHttp(1);
+          await Future.delayed(Duration(seconds: 2), () {
+            page = 1;
+            getHttp(page);
+          });
         },
         onLoad: () async {
-          getHttp(page++);
+          await Future.delayed(Duration(seconds: 2), () {
+            //page+=1;
+            //page++;
+            page = page + 1;
+            print("触发了:${page + 1}");
+            getHttp(page);
+          });
         },
         slivers: <Widget>[
           SliverList(
             delegate: SliverChildBuilderDelegate(
               (context, index) {
                 NewsListEntity entity = news[index];
-                return ListViewCell(entity.title, entity.summary);
+                return ListViewCell(
+                  title: entity.title,
+                  subTitle: entity.summary,
+                  onPressed: () {
+                    print("点击了: $index");
+                    /// 这样跳转底部tabbar隐藏 导航栏颜色为蓝色
+                    Navigator.of(context, rootNavigator: true).push(
+                        CupertinoPageRoute(builder: (BuildContext context) {
+                      return NewsPage();
+                    }));
+
+                    /// 这样push 底部tabbar还在 导航栏颜色也是黄色
+                    // Navigator.push(context, MaterialPageRoute(
+                    //   builder: (BuildContext context) {
+                    //     return NewsPage();
+                    //   },
+                    // ));
+                  },
+                );
               },
               childCount: news.length,
             ),
@@ -201,6 +247,7 @@ class _SampleAppPageState extends State<FindPageView> {
     HttpUtil.getInstance().post('/api/news', params, (data) {
       // 请求成功
       NewsEntity newsEntity = NewsEntity.fromJson(data);
+
       /// 刷新
       setState(() {
         if (page == 1) {
@@ -215,7 +262,7 @@ class _SampleAppPageState extends State<FindPageView> {
     }, (HttpIOException error) {
       // 请求错误
       print(error.message);
-       // 结束刷新
+      // 结束刷新
       _controller.finishRefresh();
       _controller.finishLoad();
     });
@@ -236,7 +283,11 @@ class _SampleAppPageState extends State<FindPageView> {
 
       /// 有点击事件
       widgets.add(GestureDetector(
-        child: ListViewCell("这是标题 $number", "这是副标题 $number"),
+        //child: ListViewCell("这是标题 $number", "这是副标题 $number",null),
+        child: ListViewCell(
+          title: "这是标题 $number",
+          subTitle: "这是副标题 $number",
+        ),
         onTap: () {
           print("点击了 $number");
         },
